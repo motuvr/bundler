@@ -52,6 +52,7 @@ module Bundler
       prefer_patch
       print_only_version_number
       setup_makes_kernel_gem_public
+      show_command
       silence_deprecations
       silence_root_warning
       skip_default_git_sources

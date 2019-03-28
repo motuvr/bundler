@@ -441,17 +441,14 @@ module Bundler
         exec_name = args.first
 
         spec_with_name = specs_by_name[gem_name]
-        spec = if exec_name
-          if spec_with_name && spec_with_name.executables.include?(exec_name)
-            spec_with_name
-          else
-            specs.find {|s| s.executables.include?(exec_name) }
-          end
+
+        matching_specs = if exec_name
+          specs.select {|s| s.executables.include?(exec_name) }
         else
-          spec_with_name
+          [spec_with_name]
         end
 
-        unless spec
+        if matching_specs.empty?
           message = "can't find executable #{exec_name} for gem #{gem_name}"
           if !exec_name || spec_with_name.nil?
             message += ". #{gem_name} is not currently included in the bundle, " \
@@ -462,11 +459,11 @@ module Bundler
 
         raise Gem::Exception, "no default executable for #{spec.full_name}" unless exec_name ||= spec.default_executable
 
-        unless spec.name == gem_name
+        spec = matching_specs.first
+        if matching_specs.size != 1
           warn \
-            "Bundler is using a binstub that was created for a different gem (#{spec.name}).\n" \
-            "You should run `bundle binstub #{gem_name}` " \
-            "to work around a system/bundle conflict."
+            "The `#{exec_name}` executable in the `#{spec.name}` gem is being loaded, but it's also present in other gems (#{matching_specs[1..-1].map(&:name).join(", ")}).\n" \
+            "If you meant to run the executable for another gem, make sure you use a project specific binstub, for example, `bundle binstub #{matching_specs[1].name}`."
         end
         spec
       end

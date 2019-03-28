@@ -147,25 +147,18 @@ RSpec.describe "bundle exec" do
       end
     end
 
-    bundle "config path.system true"
-
     install_gemfile <<-G
-      source "file://#{gem_repo1}"
+      source "file://#{gem_repo2}"
       gem "rack", "0.9.1"
+      gem "rack_two", "1.0.0"
     G
-
-    Dir.chdir bundled_app2 do
-      install_gemfile bundled_app2("Gemfile"), <<-G
-        source "file://#{gem_repo2}"
-        gem "rack_two", "1.0.0"
-      G
-    end
 
     bundle! "exec rackup"
 
+    expect(out).to eq("0.9.1")
     expect(err).to eq(
-      "Bundler is using a binstub that was created for a different gem (rack).\n" \
-      "You should run `bundle binstub rack_two` to work around a system/bundle conflict."
+      "The `rackup` executable in the `rack` gem is being loaded, but it's also present in other gems (rack_two).\n" \
+      "If you meant to run the executable for another gem, make sure you use a project specific binstub, for example, `bundle binstub rack_two`."
     )
   end
 
